@@ -1,0 +1,16 @@
+{
+  "name": "play_box",
+  "version": "1.0.0",
+  "description": "a complete video hosting website similar to youtube with all the features like login, signup, upload video, like, dislike, comment, reply, subscribe, unsubscribe, and many more.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon src/index.js"
+  },
+  "author": "Muhammad Huzaifa",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.2",
+    "prettier": "^3.3.0"
+  }
+}
