@@ -51,8 +51,6 @@ const userSchema = new Schema(
   }
 );
 
-
-
 //we can't use arrow function here because we need to use (this)
 //we have to use pre method to hash the password before saving it to the database
 userSchema.pre("save", async function (next) {
