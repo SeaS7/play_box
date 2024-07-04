@@ -1,7 +1,10 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.models.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import {
+  uploadOnCloudinary,
+  deleteFromCloudinary,
+} from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
@@ -60,7 +63,7 @@ const registerUser = asyncHandler(async (req, res) => {
   if (!avatar) {
     throw new ApiError(500, "Avatar is required");
   }
-
+  console.log(avatar, coverImage);
   // create user object - create entry in db
   const user = await User.create({
     fullName,
@@ -113,7 +116,7 @@ const loginUser = asyncHandler(async (req, res) => {
     user._id
   );
 
-  const loggedInUser = await User.findById(user._id).select(
+  const loggedInUser = await User.findById(user?._id).select(
     "-password -refreshToken"
   );
 
@@ -203,7 +206,9 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
 const changeCurrentPassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword } = req.body;
-  const user = await User.findById(req.user?._id);
+  const user = await User.findById(req.user?._id).select(
+    "-password -refreshToken"
+  );
   const isPasswordCorrect = user.isPasswordCorrect(currentPassword);
 
   if (!isPasswordCorrect) {
@@ -258,17 +263,18 @@ const updateAvatarImage = asyncHandler(async (req, res) => {
     throw ApiError(400, "Error while uploading on cloudinary");
   }
 
-  const user = await User.findByIdAndUpdate(
-    req.user?._id,
-    {
-      $set: {
-        avatar: avatar.url,
-      },
-    },
-    {
-      new: true,
-    }
-  ).select("-password");
+  const user = await User.findById(req.user?._id).select(
+    "-password -refreshToken"
+  );
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+  console.log(user.avatar);
+  deleteFromCloudinary(user.avatar);
+  user.avatar = avatar.url;
+  await user.save();
+  console.log(user.avatar);
 
   return res
     .status(200)
@@ -287,24 +293,27 @@ const updateCoverImage = asyncHandler(async (req, res) => {
     throw ApiError(400, "Error while uploading on cloudinary");
   }
 
-  const user = await User.findByIdAndUpdate(
-    req.user?._id,
-    {
-      $set: {
-        coverImage: coverImage.url,
-      },
-    },
-    {
-      new: true,
-    }
-  ).select("-password");
+  const user = await User.findById(req.user?._id).select(
+    "-password -refreshToken"
+  );
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+  console.log(user.avatar);
+  if (user.coverImage !== "") {
+    deleteFromCloudinary(user.avatar);
+  }
+  user.coverImage = coverImage.url;
+  await user.save();
+  console.log(user.coverImage);
 
   return res
     .status(200)
     .json(new ApiResponse(200, user, "Cover Image updated successfully"));
 });
 
-const getUserChannalProfile = asyncHandler(async (req, res) => {
+const getUserChannelProfile = asyncHandler(async (req, res) => {
   const username = req.params;
 
   if (!username?.trim()) {
@@ -434,6 +443,6 @@ export {
   updateAccountDetails,
   updateAvatarImage,
   updateCoverImage,
-  getUserChannalProfile,
+  getUserChannelProfile,
   getUserWatchHistory,
 };

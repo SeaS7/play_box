@@ -1,9 +1,16 @@
 import { Router } from "express";
 import {
+  registerUser,
   loginUser,
   logoutUser,
-  registerUser,
   refreshAccessToken,
+  changeCurrentPassword,
+  getCurrentUser,
+  updateAccountDetails,
+  updateAvatarImage,
+  updateCoverImage,
+  getUserChannelProfile,
+  getUserWatchHistory,
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyToken } from "../middlewares/auth.middleware.js";
@@ -29,19 +36,19 @@ router.route("/login").post(loginUser);
 //secure route
 router.route("/logout").post(verifyToken, logoutUser);
 router.route("/refresh-token").post(refreshAccessToken);
-router.route("/change-password").post(verifyJWT, changeCurrentPassword);
-router.route("/current-user").get(verifyJWT, getCurrentUser);
+router.route("/change-password").post(verifyToken, changeCurrentPassword);
+router.route("/current-user").get(verifyToken, getCurrentUser);
 
 //for updating data we have to use patch otherwise if we'll use post it will update everything,  PATCH allows partially updating data
-router.route("/update-account").patch(verifyJWT, updateAccountDetails);
+router.route("/update-account").patch(verifyToken, updateAccountDetails);
 router
   .route("/avatar")
-  .patch(verifyJWT, upload.single("avatar"), updateUserAvatar);
+  .patch(verifyToken, upload.single("avatar"), updateAvatarImage);
 router
   .route("/cover-image")
-  .patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage);
+  .patch(verifyToken, upload.single("coverImage"), updateCoverImage);
 
-router.route("/c/:username").get(verifyJWT, getUserChannelProfile);
-router.route("/history").get(verifyJWT, getWatchHistory);
+router.route("/c/:username").get(verifyToken, getUserChannelProfile);
+router.route("/history").get(verifyToken, getUserWatchHistory);
 
 export default router;
